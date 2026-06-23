@@ -1,0 +1,21 @@
+{
+  "name": "08 GitHub → 飞书：Push/PR/Issue → 卡片通知",
+  "nodes": [
+    { "parameters": { "httpMethod": "POST", "path": "github", "responseMode": "lastNode", "options": {} },
+      "id": "hook", "name": "🌐 GitHub Webhook", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [-500, 300], "webhookId": "github-feishu" },
+    { "parameters": {
+        "resource": "messaging", "operation": "sendCardMessage",
+        "receiveIdType": "open_id", "receiveId": "← 替换为团队群 chat_id",
+        "cardTitle": "={{ $json.action === 'opened' ? '🐛 新 Issue' : $json.action === 'closed' ? '✅ Issue 已关闭' : $json.pull_request ? '🔀 PR 更新' : '📦 Push' }}",
+        "cardContent": "=**仓库：** {{ $json.repository.full_name }}\n**{{ $json.pull_request ? 'PR' : 'Issue' }}：** {{ ($json.pull_request || $json.issue || {}).title }}\n**用户：** {{ $json.sender.login }}\n**操作：** {{ $json.action }}\n\n🔗 {{ ($json.pull_request || $json.issue || {}).html_url }}",
+        "cardColor": "={{ $json.action === 'opened' ? 'green' : $json.action === 'closed' ? 'default' : 'blue' }}"
+      },
+      "id": "feishu", "name": "→ 飞书卡片", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [-250, 300],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    }
+  ],
+  "connections": { "🌐 GitHub Webhook": { "main": [[{ "node": "→ 飞书卡片", "type": "main", "index": 0 }]] } },
+  "pinData": {}, "versionId": "1.0.0", "active": false, "settings": {},
+  "tags": [{ "name": "GitHub" }, { "name": "CI/CD" }, { "name": "开发者" }]
+}

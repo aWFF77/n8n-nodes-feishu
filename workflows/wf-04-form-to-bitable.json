@@ -1,0 +1,39 @@
+{
+  "name": "04 表单归档：提交 → Bitable 写入 → 飞书卡片通知",
+  "nodes": [
+    { "parameters": { "httpMethod": "POST", "path": "form", "responseMode": "lastNode", "options": {} },
+      "id": "hook", "name": "🌐 表单提交 Webhook", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [-750, 300], "webhookId": "form-bitable" },
+    { "parameters": {
+        "resource": "contacts", "operation": "getUserInfo", "lookupBy": "email",
+        "userLookup": "={{ $json.email }}"
+      },
+      "id": "lookup", "name": "① 查提交人信息", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [-500, 300],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    },
+    { "parameters": {
+        "resource": "bitable", "operation": "createBitable",
+        "appToken": "← 替换为多维表格 App Token",
+        "tableId": "← 替换为 Table ID",
+        "fields": "={\"提交人\": \"{{ $('① 查提交人信息').first().json.name || $json.email }}\", \"内容\": \"{{ $json.content }}\", \"优先级\": \"{{ $json.priority || '普通' }}\", \"时间\": \"{{ new Date().toLocaleString('zh-CN') }}\"}"
+      },
+      "id": "bitable", "name": "② 写入多维表格", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [-250, 300],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    },
+    { "parameters": {
+        "resource": "messaging", "operation": "sendCardMessage",
+        "receiveIdType": "open_id", "receiveId": "← 替换为团队群 chat_id",
+        "cardTitle": "=📋 新提交 — {{ $json.priority || '普通' }}优先级",
+        "cardContent": "=**来自：** {{ $('① 查提交人信息').first().json.name || $json.email }}\n**内容：** {{ $json.content }}\n**时间：** {{ new Date().toLocaleString('zh-CN') }}\n\n✅ 已归档到多维表格",
+        "cardColor": "={{ $json.priority === '紧急' ? 'red' : 'blue' }}"
+      },
+      "id": "notify", "name": "③ 发卡片通知团队", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [0, 300],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    }
+  ],
+  "connections": { "🌐 表单提交 Webhook": { "main": [[{ "node": "① 查提交人信息", "type": "main", "index": 0 }]] }, "① 查提交人信息": { "main": [[{ "node": "② 写入多维表格", "type": "main", "index": 0 }]] }, "② 写入多维表格": { "main": [[{ "node": "③ 发卡片通知团队", "type": "main", "index": 0 }]] } },
+  "pinData": {}, "versionId": "1.0.0", "active": false, "settings": {},
+  "tags": [{ "name": "表单" }, { "name": "Bitable" }, { "name": "CRM" }]
+}

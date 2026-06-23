@@ -1,0 +1,33 @@
+{
+  "name": "07 资讯聚合：RSS/API 数据 → 飞书汇总推送",
+  "nodes": [
+    { "parameters": { "rule": { "interval": [{ "field": "hours", "hoursInterval": 6 }] } },
+      "id": "cron", "name": "⏰ 每6小时", "type": "n8n-nodes-base.scheduleTrigger", "typeVersion": 1.3, "position": [-750, 300] },
+    { "parameters": { "method": "GET", "url": "← 替换为 RSS 或数据 API 地址", "sendBody": false, "options": {} },
+      "id": "fetch", "name": "① 拉取数据源", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-500, 300] },
+    { "parameters": {
+        "resource": "bitable", "operation": "createBitable",
+        "appToken": "← 替换为存档用的多维表格 App Token",
+        "tableId": "← 替换为 Table ID",
+        "fields": "={\"标题\": \"{{ $json.title || $json.name }}\", \"内容摘要\": \"{{ $json.summary || $json.content || '' }}\", \"链接\": \"{{ $json.link || $json.url || '' }}\", \"抓取时间\": \"{{ new Date().toLocaleString('zh-CN') }}\"}"
+      },
+      "id": "archive", "name": "② 存档到多维表格", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [-250, 300],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    },
+    { "parameters": {
+        "resource": "messaging", "operation": "sendCardMessage",
+        "receiveIdType": "open_id", "receiveId": "← 替换为推送群 chat_id",
+        "cardTitle": "=📰 资讯推送 — {{ new Date().toLocaleDateString('zh-CN') }}",
+        "cardContent": "=**最新内容：**\n{{ $json.title || $json.name }}\n\n{{ ($json.summary || $json.content || '').slice(0, 500) }}\n\n🔗 {{ $json.link || $json.url || '' }}\n\n📋 已存档到多维表格",
+        "cardColor": "blue"
+      },
+      "id": "push", "name": "③ 推送卡片", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [0, 300],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    }
+  ],
+  "connections": { "⏰ 每6小时": { "main": [[{ "node": "① 拉取数据源", "type": "main", "index": 0 }]] }, "① 拉取数据源": { "main": [[{ "node": "② 存档到多维表格", "type": "main", "index": 0 }]] }, "② 存档到多维表格": { "main": [[{ "node": "③ 推送卡片", "type": "main", "index": 0 }]] } },
+  "pinData": {}, "versionId": "1.0.0", "active": false, "settings": {},
+  "tags": [{ "name": "资讯" }, { "name": "RSS" }, { "name": "知识管理" }]
+}

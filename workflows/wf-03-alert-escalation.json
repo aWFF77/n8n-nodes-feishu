@@ -1,0 +1,34 @@
+{
+  "name": "03 分级告警：异常检测 → 按严重程度推送 + 批量@人",
+  "nodes": [
+    { "parameters": { "rule": { "interval": [{ "field": "minutes", "minutesInterval": 5 }] } },
+      "id": "cron", "name": "⏰ 每5分钟", "type": "n8n-nodes-base.scheduleTrigger", "typeVersion": 1.3, "position": [-750, 300] },
+    { "parameters": { "method": "GET", "url": "← 替换为要监控的 URL", "sendBody": false, "options": { "timeout": 10000 } },
+      "id": "check", "name": "① 检查目标", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-500, 300] },
+    { "parameters": { "conditions": { "number": [{ "value1": "={{ $response.statusCode }}", "operation": "notEqual", "value2": 200 }] } },
+      "id": "if", "name": "② 异常？", "type": "n8n-nodes-base.if", "typeVersion": 2, "position": [-250, 300] },
+    { "parameters": {
+        "resource": "messaging", "operation": "sendCardMessage",
+        "receiveIdType": "open_id", "receiveId": "← 替换为告警接收人 open_id",
+        "cardTitle": "🚨 服务异常",
+        "cardContent": "=**目标：** ←替换为监控名称\n**状态码：** {{ $('① 检查目标').first().json.statusCode }}\n**时间：** {{ new Date().toLocaleString('zh-CN') }}\n\n请立即处理！",
+        "cardColor": "red"
+      },
+      "id": "alert", "name": "③ 发红色告警卡片", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [0, 100],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    },
+    { "parameters": {
+        "resource": "messaging", "operation": "batchSend",
+        "batchRecipients": "← 替换为多个值班人员 open_id，每行一个",
+        "batchMessage": "=🚨 告警：服务异常，状态码 {{ $('① 检查目标').first().json.statusCode }}，请立即处理！"
+      },
+      "id": "batch", "name": "④ 批量通知值班人员", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [0, 400],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    }
+  ],
+  "connections": { "⏰ 每5分钟": { "main": [[{ "node": "① 检查目标", "type": "main", "index": 0 }]] }, "① 检查目标": { "main": [[{ "node": "② 异常？", "type": "main", "index": 0 }]] }, "② 异常？": { "main": [[{ "node": "③ 发红色告警卡片", "type": "main", "index": 0 }], [{ "node": "④ 批量通知值班人员", "type": "main", "index": 0 }]] } },
+  "pinData": {}, "versionId": "1.0.0", "active": false, "settings": {},
+  "tags": [{ "name": "告警" }, { "name": "监控" }, { "name": "SRE" }]
+}

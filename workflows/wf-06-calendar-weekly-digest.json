@@ -1,0 +1,31 @@
+{
+  "name": "06 每周日程：周一早晨推送本周所有会议",
+  "nodes": [
+    { "parameters": { "rule": { "interval": [{ "field": "weeks", "weeksInterval": 1 }] }, "triggerTimes": { "triggerTimes": [{ "mode": "custom", "hour": 8, "minute": 30, "dayOfWeek": 1 }] } },
+      "id": "cron", "name": "⏰ 每周一 8:30", "type": "n8n-nodes-base.scheduleTrigger", "typeVersion": 1.3, "position": [-500, 300] },
+    { "parameters": {
+        "resource": "calendar", "operation": "listCalendarEvents",
+        "calendarId": "← 替换为日历 ID 或填 primary",
+        "startTime": "={{ new Date().toISOString().slice(0,10) + 'T00:00:00+08:00' }}",
+        "endTime": "={{ new Date(Date.now() + 7*86400000).toISOString().slice(0,10) + 'T23:59:59+08:00' }}"
+      },
+      "id": "cal", "name": "① 拉本周事件", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [-250, 300],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    },
+    { "parameters": {
+        "resource": "messaging", "operation": "sendCardMessage",
+        "receiveIdType": "open_id", "receiveId": "← 替换为你的 open_id",
+        "cardTitle": "=📅 本周日程 — {{ new Date().toLocaleDateString('zh-CN') }} 起",
+        "cardContent": "={{ $json.events.length === 0 ? '✅ 本周暂无安排。' : '**共 ' + $json.events.length + ' 个事件：**\n' + $json.events.map(function(e){ var d = new Date(e.start).toLocaleDateString('zh-CN', {weekday:'short',month:'short',day:'numeric'}); return '• **' + d + '** ' + e.summary; }).join('\n') }}",
+        "cardColor": "green"
+      },
+      "id": "card", "name": "② 发周报卡片", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [0, 300],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    }
+  ],
+  "connections": { "⏰ 每周一 8:30": { "main": [[{ "node": "① 拉本周事件", "type": "main", "index": 0 }]] }, "① 拉本周事件": { "main": [[{ "node": "② 发周报卡片", "type": "main", "index": 0 }]] } },
+  "pinData": {}, "versionId": "1.0.0", "active": false, "settings": {},
+  "tags": [{ "name": "日历" }, { "name": "周报" }, { "name": "会议" }]
+}

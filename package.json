@@ -1,0 +1,37 @@
+{
+  "name": "@lixiongwei/n8n-nodes-feishu",
+  "version": "2.1.2",
+  "description": "Feishu/Lark nodes for n8n — send messages, manage Bitables, process approvals. Free tier + Pro license.",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "feishu",
+    "lark",
+    "飞书"
+  ],
+  "author": "FileMaster Pro",
+  "license": "MIT",
+  "dependencies": {
+    "form-data": "^4.0.6",
+    "n8n-workflow": "^1.48.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "nodes": [
+      "nodes/Feishu/Feishu.node.js",
+      "nodes/Feishu/FeishuTrigger.node.js"
+    ],
+    "credentials": [
+      "credentials/FeishuApi.credentials.js"
+    ]
+  }
+}

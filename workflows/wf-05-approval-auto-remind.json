@@ -1,0 +1,25 @@
+{
+  "name": "05 审批催办：定时检查待审批 → 自动提醒审批人",
+  "nodes": [
+    { "parameters": { "rule": { "interval": [{ "field": "hours", "hoursInterval": 2 }] } },
+      "id": "cron", "name": "⏰ 每2小时检查", "type": "n8n-nodes-base.scheduleTrigger", "typeVersion": 1.3, "position": [-750, 300] },
+    { "parameters": { "resource": "approvals", "operation": "listApprovals", "approvalCode": "← 可选：填审批类型 code，不填则查全部" },
+      "id": "list", "name": "① 获取待审批列表", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [-500, 300],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    },
+    { "parameters": { "resource": "messaging", "operation": "sendCardMessage",
+        "receiveIdType": "open_id", "receiveId": "← 替换为审批负责人 open_id",
+        "cardTitle": "=⏳ 待审批提醒 — {{ $json.pending.length }} 条待处理",
+        "cardContent": "={{ $json.pending.length === 0 ? '✅ 暂无待审批，一切正常。' : '**请及时处理以下审批：**\n' + $json.pending.map(function(x,i){ return (i+1) + '. ' + x.approvalName + ' — ' + new Date(x.startTime).toLocaleString('zh-CN'); }).join('\n') }}",
+        "cardColor": "={{ $json.pending.length > 5 ? 'red' : $json.pending.length > 0 ? 'yellow' : 'green' }}"
+      },
+      "id": "remind", "name": "② 发催办卡片", "type": "@lixiongwei/n8n-nodes-feishu.feishu", "typeVersion": 2,
+      "position": [-250, 300],
+      "credentials": { "feishuApi": { "id": "PLACEHOLDER", "name": "飞书 Feishu account" } }
+    }
+  ],
+  "connections": { "⏰ 每2小时检查": { "main": [[{ "node": "① 获取待审批列表", "type": "main", "index": 0 }]] }, "① 获取待审批列表": { "main": [[{ "node": "② 发催办卡片", "type": "main", "index": 0 }]] } },
+  "pinData": {}, "versionId": "1.0.0", "active": false, "settings": {},
+  "tags": [{ "name": "审批" }, { "name": "催办" }, { "name": "HR" }]
+}
