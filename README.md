@@ -24,7 +24,7 @@ Requires: n8n self-hosted. (n8n Cloud does not support community nodes.)
 | **Messaging** | Send Text Message | Send plain text to users or groups |
 | **Trigger** | Message Received | Webhook — fires when the bot receives a message |
 
-### ⭐ Pro — $49 one-time ([get a key](https://1717465779306.gumroad.com/l/feishu-pro))
+### ⭐ Pro — $29 one-time ([get a key](https://1717465779306.gumroad.com/l/feishu-pro))
 
 | Category | Operations |
 |----------|------------|
