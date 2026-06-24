@@ -1,6 +1,6 @@
 {
   "name": "@lixiongwei/n8n-nodes-feishu",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Feishu/Lark nodes for n8n — send messages, manage Bitables, process approvals. Free tier + Pro license.",
   "scripts": {
     "build": "tsc",
